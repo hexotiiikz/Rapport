@@ -13,18 +13,14 @@ body {
     display: flex;
 }
 
-/* FORM */
 .form {
     width: 35%;
     padding: 20px;
     background: #2a2a2a;
     height: 100vh;
-    overflow-y: auto;
 }
 
-h2 {
-    color: gold;
-}
+h2 { color: gold; }
 
 input, select {
     width: 100%;
@@ -41,7 +37,6 @@ button {
     cursor: pointer;
 }
 
-/* RESULT */
 .output {
     width: 65%;
     padding: 20px;
@@ -62,7 +57,9 @@ textarea {
 <div class="form">
 <h2>🛡️ Rapport Shérif</h2>
 
-<input id="rédacteur" placeholder="Rédacteur">
+<!-- MENU DÉROULANT RÉDACTEUR -->
+<select id="rédacteur"></select>
+
 <input id="effectifs" placeholder="Effectifs présents">
 <input id="lieu" placeholder="Lieu">
 
@@ -80,6 +77,10 @@ textarea {
 
 <button onclick="generate()">Générer</button>
 <button onclick="copyText()">Copier</button>
+
+<br><br>
+<a href="settings.html" style="color:gold;">⚙️ Gérer les rédacteurs</a>
+
 </div>
 
 <div class="output">
@@ -88,6 +89,24 @@ textarea {
 </div>
 
 <script>
+
+// charger les rédacteurs
+function loadRédacteurs() {
+    let list = JSON.parse(localStorage.getItem("redacteurs") || "[]");
+    let select = document.getElementById("rédacteur");
+
+    select.innerHTML = "";
+
+    list.forEach(name => {
+        let opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+    });
+}
+
+loadRédacteurs();
+
 function getCharge(type) {
     switch(type) {
         case "Braquage de commerce": return {cash: 20, time: 3};
@@ -115,33 +134,16 @@ let totalCash = charge.cash + (o * 60);
 let totalTime = charge.time + (o * 6);
 
 let texte =
-`========================
-      RAPPORT SHÉRIF
-========================
+`Rédacteur : ${r}
 
-Rédacteur : ${r}
-Effectifs présents : ${e}
 Lieu : ${l}
 
+Incident : ${t}
+
 Suspects : ${s}
-${m ? "Membres : " + m : ""}
-
-------------------------
-
-Incident : ${t} à ${l}
-
-Otages : ${o}
-
-------------------------
 
 Charges :
-- ${t} → ${charge.cash}$ / ${charge.time}h
-- Otages → ${o*60}$ / ${o*6}h
-
-TOTAL :
-→ ${totalCash}$ / ${totalTime}h
-
-========================`;
+→ ${totalCash}$ / ${totalTime}h TDP`;
 
 document.getElementById("result").value = texte;
 }
