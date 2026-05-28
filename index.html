@@ -21,9 +21,7 @@ body {
     overflow-y: auto;
 }
 
-h2 {
-    color: gold;
-}
+h2 { color: gold; }
 
 select, input {
     width: 100%;
@@ -60,40 +58,25 @@ textarea {
 
 <h2>🛡️ Rapport Sheriff</h2>
 
+<!-- REDACTEUR -->
+<select id="redacteur"></select>
+
 <!-- EFFECTIFS -->
-<select id="effectifs">
-    <option>Esther Harrington, LGW-5009</option>
-    <option>Arsène Williams, LGW-5545</option>
-    <option>Douglas Blackwood, LGW-7776</option>
-    <option>Isaac Marshall, LGW-4446</option>
-    <option>Theresa Marceau, LGW-6866</option>
-    <option>Wambli Ska, LGW-7777</option>
-    <option>Lawn Hayes, LGW-7973</option>
-    <option>Larry Brown</option>
-    <option>Zane Callahan</option>
-    <option>Elias Reeds</option>
-</select>
+<select id="effectifs"></select>
 
 <!-- LIEUX -->
-<select id="lieu">
-    <option>Saint-Denis</option>
-    <option>Valentine</option>
-    <option>Blackwater</option>
-    <option>Rhodes</option>
-    <option>Strawberry</option>
-    <option>Van Horn</option>
-    <option>Emerald</option>
-    <option>Macfarlane</option>
-    <option>Annesburg</option>
-    <option>Armadillo</option>
-    <option>Tumbleweed</option>
-    <option>Mercer Station</option>
-    <option>Riggs Station</option>
-    <option>Wallace Station</option>
-    <option>Fort Wallace</option>
-</select>
+<select id="lieu"></select>
 
-<!-- TYPE BRAQUAGE -->
+<!-- SUSPECTS -->
+<select id="suspect"></select>
+
+<!-- GROUPES -->
+<select id="groupe" onchange="loadMembers()"></select>
+
+<!-- MEMBRES -->
+<select id="membres" multiple></select>
+
+<!-- TYPE -->
 <select id="type">
     <option>Braquage de commerce</option>
     <option>Braquage d'Armurerie</option>
@@ -101,26 +84,6 @@ textarea {
     <option>Braquage de convoi fédéral</option>
     <option>Attaque sur batiment fédéral</option>
 </select>
-
-<!-- GROUPES -->
-<select id="groupe">
-    <option>European Guys</option>
-    <option>Guardia</option>
-    <option>Famille Carver</option>
-    <option>Meute Rouge</option>
-    <option>Guetteurs</option>
-    <option>Blood Peek Gang</option>
-    <option>The Dock Rats</option>
-    <option>Tribu Comanche</option>
-    <option>Tribu Toruk</option>
-    <option>Frostborn</option>
-    <option>Butcher</option>
-    <option>The Wellers</option>
-    <option>Famille Valmont</option>
-</select>
-
-<!-- OTAGES -->
-<input id="otages" type="number" placeholder="Nombre d'otages">
 
 <button onclick="generate()">Générer</button>
 
@@ -133,54 +96,87 @@ textarea {
 
 <script>
 
-function getCharge(type) {
-    switch(type) {
-        case "Braquage de commerce": return {cash: 20, time: 3};
-        case "Braquage d'Armurerie": return {cash: 50, time: 4};
-        case "Braquage de Banque/Fort/Convoi": return {cash: 100, time: 10};
-        case "Braquage de convoi fédéral": return {cash: 150, time: 15};
-        case "Attaque sur batiment fédéral": return {cash: 100, time: 48};
-        default: return {cash: 0, time: 0};
-    }
+function loadData(key, id) {
+    let data = JSON.parse(localStorage.getItem(key) || "[]");
+    let select = document.getElementById(id);
+    select.innerHTML = "";
+
+    data.forEach(v => {
+        let opt = document.createElement("option");
+        opt.value = v;
+        opt.textContent = v;
+        select.appendChild(opt);
+    });
+}
+
+function loadGroups() {
+    let groups = JSON.parse(localStorage.getItem("groupes") || "{}");
+    let select = document.getElementById("groupe");
+    select.innerHTML = "";
+
+    Object.keys(groups).forEach(g => {
+        let opt = document.createElement("option");
+        opt.value = g;
+        opt.textContent = g;
+        select.appendChild(opt);
+    });
+}
+
+function loadMembers() {
+    let groups = JSON.parse(localStorage.getItem("groupes") || "{}");
+    let g = document.getElementById("groupe").value;
+    let select = document.getElementById("membres");
+
+    select.innerHTML = "";
+
+    (groups[g] || []).forEach(m => {
+        let opt = document.createElement("option");
+        opt.value = m;
+        opt.textContent = m;
+        select.appendChild(opt);
+    });
 }
 
 function generate() {
 
+let r = document.getElementById("redacteur").value;
 let e = document.getElementById("effectifs").value;
 let l = document.getElementById("lieu").value;
-let t = document.getElementById("type").value;
+let s = document.getElementById("suspect").value;
 let g = document.getElementById("groupe").value;
-let o = parseInt(document.getElementById("otages").value || 0);
+let m = [...document.getElementById("membres").selectedOptions].map(o => o.value).join(", ");
+let t = document.getElementById("type").value;
 
-let charge = getCharge(t);
-
-let totalCash = charge.cash + (o * 60);
-let totalTime = charge.time + (o * 6);
+let date = new Date(1903, new Date().getMonth(), new Date().getDate());
 
 let texte =
-`========================
-      RAPPORT SHÉRIF
-========================
+`Rédacteur : ${r}
 
-Effectif : ${e}
+Effectifs : ${e}
+
 Lieu : ${l}
+
+Date : ${date.toLocaleDateString()}
+
+Suspects : ${s}
+
 Groupe : ${g}
+Membres : ${m}
 
-Incident : ${t}
+----------------------------
 
-Otages : ${o}
-
-Charges :
-- Base → ${charge.cash}$ / ${charge.time}h
-- Otages → ${o*60}$ / ${o*6}h
-
-TOTAL :
-→ ${totalCash}$ / ${totalTime}h
-
-========================`;
+Le bureau des shérifs de Valentine a été informé qu’un ${t} avait lieu à ${l}.
+`;
 
 document.getElementById("result").value = texte;
 }
+
+// LOAD ALL
+loadData("redacteurs", "redacteur");
+loadData("effectifs", "effectifs");
+loadData("lieux", "lieu");
+loadData("suspects", "suspect");
+loadGroups();
 
 </script>
 
