@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Admin + Rapport Sheriff RP</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #111;
+    color: white;
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar {
+    width: 220px;
+    background: #1b1b1b;
+    padding: 15px;
+}
+
+.sidebar button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    background: gold;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.panel {
+    display: none;
+    padding: 20px;
+    overflow-y: auto;
+    width: 100%;
+}
+
+.active {
+    display: block;
+}
+
+h2 { color: gold; }
+
+input, select, textarea {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+}
+
+button.action {
+    width: 100%;
+    padding: 8px;
+    background: gold;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.list-item {
+    display: flex;
+    justify-content: space-between;
+    background: #222;
+    padding: 5px;
+    margin-bottom: 5px;
+}
+
+.output textarea {
+    width: 100%;
+    height: 70vh;
+    background: black;
+    color: lime;
+    font-family: monospace;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <button onclick="showPanel('admin')">⚙️ Admin</button>
+    <button onclick="showPanel('report')">📄 Rapport</button>
+</div>
+
+<!-- ADMIN -->
+<div id="admin" class="panel active">
+<h2>Administration</h2>
+
+<h3>Rédacteurs</h3>
+<input id="add_redacteur" placeholder="Ajouter rédacteur">
+<button class="action" onclick="addItem('redacteurs','add_redacteur')">Ajouter</button>
+<div id="list_redacteurs"></div>
+
+<h3>Effectifs</h3>
+<input id="add_effectif" placeholder="Ajouter effectif">
+<button class="action" onclick="addItem('effectifs','add_effectif')">Ajouter</button>
+<div id="list_effectifs"></div>
+
+<h3>Lieux</h3>
+<input id="add_lieu" placeholder="Ajouter lieu">
+<button class="action" onclick="addItem('lieux','add_lieu')">Ajouter</button>
+<div id="list_lieux"></div>
+
+<h3>Suspects</h3>
+<input id="add_suspect" placeholder="Ajouter suspect">
+<button class="action" onclick="addItem('suspects','add_suspect')">Ajouter</button>
+<div id="list_suspects"></div>
+
+<h3>Groupes</h3>
+<input id="group_name" placeholder="Nom du groupe">
+<button class="action" onclick="addGroup()">Créer groupe</button>
+
+<select id="group_select" onchange="loadGroupMembers()"></select>
+<input id="group_member" placeholder="Ajouter membre au groupe">
+<button class="action" onclick="addMemberToGroup()">Ajouter membre</button>
+
+<div id="group_members"></div>
+
+</div>
+
+<!-- RAPPORT -->
+<div id="report" class="panel">
+<h2>Rapport Sheriff</h2>
+
+<select id="redacteur"></select>
+<select id="effectifs"></select>
+<select id="lieu"></select>
+<select id="suspect"></select>
+
+<select id="groupe" onchange="loadMembers()"></select>
+<select id="membres" multiple></select>
+
+<select id="type">
+    <option>Braquage de commerce</option>
+    <option>Braquage d'Armurerie</option>
+    <option>Braquage de Banque/Fort/Convoi</option>
+    <option>Braquage de convoi fédéral</option>
+    <option>Attaque sur batiment fédéral</option>
+</select>
+
+<button class="action" onclick="generate()">Générer</button>
+
+<div class="output">
+<textarea id="result"></textarea>
+</div>
+</div>
+
+<script>
+
+function showPanel(id){
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+function save(key, data){
+    localStorage.setItem(key, JSON.stringify(data));
+}
+
+function get(key){
+    return JSON.parse(localStorage.getItem(key) || "[]");
+}
+
+function renderList(key, containerId){
+    let data = get(key);
+    let div = document.getElementById(containerId);
+    div.innerHTML = "";
+
+    data.forEach((v,i) => {
+        let el = document.createElement("div");
+        el.className = "list-item";
+        el.innerHTML = v + `<button onclick=\"deleteItem('${key}',${i})\">X</button>`;
+        div.appendChild(el);
+    });
+}
+
+function addItem(key,inputId){
+    let input = document.getElementById(inputId);
+    let data = get(key);
+    data.push(input.value);
+    save(key,data);
+    input.value="";
+    renderAll();
+}
+
+function deleteItem(key,index){
+    let data = get(key);
+    data.splice(index,1);
+    save(key,data);
+    renderAll();
+}
+
+function renderAll(){
+    renderList('redacteurs','list_redacteurs');
+    renderList('effectifs','list_effectifs');
+    renderList('lieux','list_lieux');
+    renderList('suspects','list_suspects');
+
+    loadData('redacteurs','redacteur');
+    loadData('effectifs','effectifs');
+    loadData('lieux','lieu');
+    loadData('suspects','suspect');
+
+    loadGroups();
+}
+
+function loadData(key,id){
+    let data = get(key);
+    let select = document.getElementById(id);
+    select.innerHTML="";
+    data.forEach(v=>{
+        let o=document.createElement("option");
+        o.value=v;o.textContent=v;
+        select.appendChild(o);
+    });
+}
+
+// GROUPES
+
+function addGroup(){
+    let name=document.getElementById('group_name').value;
+    let groups=JSON.parse(localStorage.getItem('groupes')||"{}");
+    if(!groups[name]) groups[name]=[];
+    save('groupes',groups);
+    document.getElementById('group_name').value="";
+    loadGroups();
+}
+
+function loadGroups(){
+    let groups=JSON.parse(localStorage.getItem('groupes')||"{}");
+    let select=document.getElementById('group_select');
+    select.innerHTML="";
+
+    Object.keys(groups).forEach(g=>{
+        let o=document.createElement('option');
+        o.value=g;o.textContent=g;
+        select.appendChild(o);
+    });
+
+    let r=document.getElementById('groupe');
+    r.innerHTML="";
+    Object.keys(groups).forEach(g=>{
+        let o=document.createElement('option');
+        o.value=g;o.textContent=g;
+        r.appendChild(o);
+    });
+}
+
+function addMemberToGroup(){
+    let g=document.getElementById('group_select').value;
+    let m=document.getElementById('group_member').value;
+
+    let groups=JSON.parse(localStorage.getItem('groupes')||"{}");
+    if(!groups[g]) groups[g]=[];
+    groups[g].push(m);
+    save('groupes',groups);
+    document.getElementById('group_member').value="";
+    loadGroupMembers();
+}
+
+function loadGroupMembers(){
+    let g=document.getElementById('group_select').value;
+    let groups=JSON.parse(localStorage.getItem('groupes')||"{}");
+
+    let div=document.getElementById('group_members');
+    div.innerHTML="";
+
+    (groups[g]||[]).forEach((m,i)=>{
+        let el=document.createElement('div');
+        el.className="list-item";
+        el.innerHTML=m+`<button onclick=\"removeMember('${g}',${i})\">X</button>`;
+        div.appendChild(el);
+    });
+}
+
+function removeMember(g,i){
+    let groups=JSON.parse(localStorage.getItem('groupes')||"{}");
+    groups[g].splice(i,1);
+    save('groupes',groups);
+    loadGroupMembers();
+}
+
+// RAPPORT
+
+function generate(){
+let r=document.getElementById('redacteur').value;
+let e=document.getElementById('effectifs').value;
+let l=document.getElementById('lieu').value;
+let s=document.getElementById('suspect').value;
+let g=document.getElementById('groupe').value;
+let m=[...document.getElementById('membres').selectedOptions].map(o=>o.value).join(', ');
+let t=document.getElementById('type').value;
+
+let date=new Date();
+date.setFullYear(1903);
+
+let texte=
+`Rédacteur : ${r}
+
+Effectifs : ${e}
+
+Lieu : ${l}
+
+Date : ${date.toLocaleDateString()}
+
+Suspects : ${s}
+
+Groupe : ${g}
+Membres : ${m}
+
+----------------------------
+
+Le bureau des shérifs de Valentine a été informé qu'un ${t} avait lieu à ${l}.
+`;
+
+document.getElementById('result').value=texte;
+}
+
+renderAll();
+
+</script>
+
+</body>
+</html>
