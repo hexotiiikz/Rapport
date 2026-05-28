@@ -2,43 +2,45 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Rapport Shérif</title>
+<title>Rapport Sheriff RP</title>
 
 <style>
 body {
     margin: 0;
     font-family: Arial;
-    background: #1b1b1b;
+    background: #111;
     color: white;
     display: flex;
 }
 
 .form {
-    width: 35%;
+    width: 40%;
     padding: 20px;
-    background: #2a2a2a;
+    background: #222;
     height: 100vh;
+    overflow-y: auto;
 }
 
-h2 { color: gold; }
+h2 {
+    color: gold;
+}
 
-input, select {
+select, input {
     width: 100%;
-    padding: 10px;
+    padding: 8px;
     margin-bottom: 10px;
 }
 
 button {
     width: 100%;
     padding: 10px;
-    margin-top: 10px;
     background: gold;
     border: none;
     cursor: pointer;
 }
 
 .output {
-    width: 65%;
+    width: 60%;
     padding: 20px;
 }
 
@@ -55,14 +57,43 @@ textarea {
 <body>
 
 <div class="form">
-<h2>🛡️ Rapport Shérif</h2>
 
-<!-- MENU DÉROULANT RÉDACTEUR -->
-<select id="rédacteur"></select>
+<h2>🛡️ Rapport Sheriff</h2>
 
-<input id="effectifs" placeholder="Effectifs présents">
-<input id="lieu" placeholder="Lieu">
+<!-- EFFECTIFS -->
+<select id="effectifs">
+    <option>Esther Harrington, LGW-5009</option>
+    <option>Arsène Williams, LGW-5545</option>
+    <option>Douglas Blackwood, LGW-7776</option>
+    <option>Isaac Marshall, LGW-4446</option>
+    <option>Theresa Marceau, LGW-6866</option>
+    <option>Wambli Ska, LGW-7777</option>
+    <option>Lawn Hayes, LGW-7973</option>
+    <option>Larry Brown</option>
+    <option>Zane Callahan</option>
+    <option>Elias Reeds</option>
+</select>
 
+<!-- LIEUX -->
+<select id="lieu">
+    <option>Saint-Denis</option>
+    <option>Valentine</option>
+    <option>Blackwater</option>
+    <option>Rhodes</option>
+    <option>Strawberry</option>
+    <option>Van Horn</option>
+    <option>Emerald</option>
+    <option>Macfarlane</option>
+    <option>Annesburg</option>
+    <option>Armadillo</option>
+    <option>Tumbleweed</option>
+    <option>Mercer Station</option>
+    <option>Riggs Station</option>
+    <option>Wallace Station</option>
+    <option>Fort Wallace</option>
+</select>
+
+<!-- TYPE BRAQUAGE -->
 <select id="type">
     <option>Braquage de commerce</option>
     <option>Braquage d'Armurerie</option>
@@ -71,15 +102,27 @@ textarea {
     <option>Attaque sur batiment fédéral</option>
 </select>
 
-<input id="suspects" placeholder="Suspects">
-<input id="membres" placeholder="Membres (optionnel)">
+<!-- GROUPES -->
+<select id="groupe">
+    <option>European Guys</option>
+    <option>Guardia</option>
+    <option>Famille Carver</option>
+    <option>Meute Rouge</option>
+    <option>Guetteurs</option>
+    <option>Blood Peek Gang</option>
+    <option>The Dock Rats</option>
+    <option>Tribu Comanche</option>
+    <option>Tribu Toruk</option>
+    <option>Frostborn</option>
+    <option>Butcher</option>
+    <option>The Wellers</option>
+    <option>Famille Valmont</option>
+</select>
+
+<!-- OTAGES -->
 <input id="otages" type="number" placeholder="Nombre d'otages">
 
 <button onclick="generate()">Générer</button>
-<button onclick="copyText()">Copier</button>
-
-<br><br>
-<a href="settings.html" style="color:gold;">⚙️ Gérer les rédacteurs</a>
 
 </div>
 
@@ -89,23 +132,6 @@ textarea {
 </div>
 
 <script>
-
-// charger les rédacteurs
-function loadRédacteurs() {
-    let list = JSON.parse(localStorage.getItem("redacteurs") || "[]");
-    let select = document.getElementById("rédacteur");
-
-    select.innerHTML = "";
-
-    list.forEach(name => {
-        let opt = document.createElement("option");
-        opt.value = name;
-        opt.textContent = name;
-        select.appendChild(opt);
-    });
-}
-
-loadRédacteurs();
 
 function getCharge(type) {
     switch(type) {
@@ -120,12 +146,10 @@ function getCharge(type) {
 
 function generate() {
 
-let r = document.getElementById("rédacteur").value;
 let e = document.getElementById("effectifs").value;
 let l = document.getElementById("lieu").value;
 let t = document.getElementById("type").value;
-let s = document.getElementById("suspects").value;
-let m = document.getElementById("membres").value;
+let g = document.getElementById("groupe").value;
 let o = parseInt(document.getElementById("otages").value || 0);
 
 let charge = getCharge(t);
@@ -134,24 +158,30 @@ let totalCash = charge.cash + (o * 60);
 let totalTime = charge.time + (o * 6);
 
 let texte =
-`Rédacteur : ${r}
+`========================
+      RAPPORT SHÉRIF
+========================
 
+Effectif : ${e}
 Lieu : ${l}
+Groupe : ${g}
 
 Incident : ${t}
 
-Suspects : ${s}
+Otages : ${o}
 
 Charges :
-→ ${totalCash}$ / ${totalTime}h TDP`;
+- Base → ${charge.cash}$ / ${charge.time}h
+- Otages → ${o*60}$ / ${o*6}h
+
+TOTAL :
+→ ${totalCash}$ / ${totalTime}h
+
+========================`;
 
 document.getElementById("result").value = texte;
 }
 
-function copyText() {
-navigator.clipboard.writeText(document.getElementById("result").value);
-alert("Copié !");
-}
 </script>
 
 </body>
