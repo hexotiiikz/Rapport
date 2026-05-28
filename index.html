@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Rapport Shérif</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #1b1b1b;
+    color: white;
+    display: flex;
+}
+
+/* FORM */
+.form {
+    width: 35%;
+    padding: 20px;
+    background: #2a2a2a;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+h2 {
+    color: gold;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background: gold;
+    border: none;
+    cursor: pointer;
+}
+
+/* RESULT */
+.output {
+    width: 65%;
+    padding: 20px;
+}
+
+textarea {
+    width: 100%;
+    height: 90vh;
+    background: black;
+    color: lime;
+    font-family: monospace;
+}
+</style>
+</head>
+
+<body>
+
+<div class="form">
+<h2>🛡️ Rapport Shérif</h2>
+
+<input id="rédacteur" placeholder="Rédacteur">
+<input id="effectifs" placeholder="Effectifs présents">
+<input id="lieu" placeholder="Lieu">
+
+<select id="type">
+    <option>Braquage de commerce</option>
+    <option>Braquage d'Armurerie</option>
+    <option>Braquage de Banque/Fort/Convoi</option>
+    <option>Braquage de convoi fédéral</option>
+    <option>Attaque sur batiment fédéral</option>
+</select>
+
+<input id="suspects" placeholder="Suspects">
+<input id="membres" placeholder="Membres (optionnel)">
+<input id="otages" type="number" placeholder="Nombre d'otages">
+
+<button onclick="generate()">Générer</button>
+<button onclick="copyText()">Copier</button>
+</div>
+
+<div class="output">
+<h2>📄 Rapport</h2>
+<textarea id="result"></textarea>
+</div>
+
+<script>
+function getCharge(type) {
+    switch(type) {
+        case "Braquage de commerce": return {cash: 20, time: 3};
+        case "Braquage d'Armurerie": return {cash: 50, time: 4};
+        case "Braquage de Banque/Fort/Convoi": return {cash: 100, time: 10};
+        case "Braquage de convoi fédéral": return {cash: 150, time: 15};
+        case "Attaque sur batiment fédéral": return {cash: 100, time: 48};
+        default: return {cash: 0, time: 0};
+    }
+}
+
+function generate() {
+
+let r = document.getElementById("rédacteur").value;
+let e = document.getElementById("effectifs").value;
+let l = document.getElementById("lieu").value;
+let t = document.getElementById("type").value;
+let s = document.getElementById("suspects").value;
+let m = document.getElementById("membres").value;
+let o = parseInt(document.getElementById("otages").value || 0);
+
+let charge = getCharge(t);
+
+let totalCash = charge.cash + (o * 60);
+let totalTime = charge.time + (o * 6);
+
+let texte =
+`========================
+      RAPPORT SHÉRIF
+========================
+
+Rédacteur : ${r}
+Effectifs présents : ${e}
+Lieu : ${l}
+
+Suspects : ${s}
+${m ? "Membres : " + m : ""}
+
+------------------------
+
+Incident : ${t} à ${l}
+
+Otages : ${o}
+
+------------------------
+
+Charges :
+- ${t} → ${charge.cash}$ / ${charge.time}h
+- Otages → ${o*60}$ / ${o*6}h
+
+TOTAL :
+→ ${totalCash}$ / ${totalTime}h
+
+========================`;
+
+document.getElementById("result").value = texte;
+}
+
+function copyText() {
+navigator.clipboard.writeText(document.getElementById("result").value);
+alert("Copié !");
+}
+</script>
+
+</body>
+</html>
