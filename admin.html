@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Admin RP Sheriff</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #111;
+    color: white;
+}
+
+.container {
+    display: flex;
+}
+
+.panel {
+    width: 50%;
+    padding: 20px;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+h2 {
+    color: gold;
+}
+
+input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+}
+
+button {
+    padding: 8px;
+    background: gold;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+li {
+    background: #222;
+    padding: 8px;
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.small {
+    font-size: 12px;
+    color: #aaa;
+}
+</style>
+</head>
+
+<body>
+
+<h1 style="text-align:center;color:gold;">⚙️ ADMIN RP SHÉRIF</h1>
+
+<div class="container">
+
+<!-- LEFT -->
+<div class="panel">
+
+<h2>👮 Rédacteurs</h2>
+<input id="redacteurInput" placeholder="Ajouter rédacteur">
+<button onclick="add('redacteurs', 'redacteurInput')">Ajouter</button>
+<ul id="redacteursList"></ul>
+
+<h2>🚔 Effectifs</h2>
+<input id="effectifInput" placeholder="Ajouter effectif">
+<button onclick="add('effectifs', 'effectifInput')">Ajouter</button>
+<ul id="effectifsList"></ul>
+
+<h2>📍 Lieux</h2>
+<input id="lieuInput" placeholder="Ajouter lieu">
+<button onclick="add('lieux', 'lieuInput')">Ajouter</button>
+<ul id="lieuxList"></ul>
+
+<h2>🔍 Suspects</h2>
+<input id="suspectInput" placeholder="Ajouter suspect">
+<button onclick="add('suspects', 'suspectInput')">Ajouter</button>
+<ul id="suspectsList"></ul>
+
+</div>
+
+<!-- RIGHT -->
+<div class="panel">
+
+<h2>👥 Groupes</h2>
+
+<input id="groupName" placeholder="Nom du groupe">
+<button onclick="addGroup()">Créer groupe</button>
+
+<input id="memberName" placeholder="Ajouter membre au groupe sélectionné">
+<select id="groupSelect"></select>
+<button onclick="addMember()">Ajouter membre</button>
+
+<ul id="groupList"></ul>
+
+</div>
+
+</div>
+
+<script>
+
+function get(key){
+    return JSON.parse(localStorage.getItem(key) || "[]");
+}
+
+function set(key, value){
+    localStorage.setItem(key, JSON.stringify(value));
+}
+
+// ---------------- ADD SIMPLE LIST ----------------
+function add(key, inputId){
+    let value = document.getElementById(inputId).value;
+    if(!value) return;
+
+    let data = get(key);
+    data.push(value);
+    set(key, data);
+
+    document.getElementById(inputId).value = "";
+    render();
+}
+
+// ---------------- DELETE ----------------
+function removeItem(key, index){
+    let data = get(key);
+    data.splice(index, 1);
+    set(key, data);
+    render();
+}
+
+// ---------------- GROUPS ----------------
+function getGroups(){
+    return JSON.parse(localStorage.getItem("groupes") || "{}");
+}
+
+function setGroups(data){
+    localStorage.setItem("groupes", JSON.stringify(data));
+}
+
+function addGroup(){
+    let name = document.getElementById("groupName").value;
+    if(!name) return;
+
+    let groups = getGroups();
+    groups[name] = [];
+
+    setGroups(groups);
+    document.getElementById("groupName").value = "";
+    render();
+}
+
+function addMember(){
+    let group = document.getElementById("groupSelect").value;
+    let member = document.getElementById("memberName").value;
+    if(!group || !member) return;
+
+    let groups = getGroups();
+    groups[group].push(member);
+
+    setGroups(groups);
+    document.getElementById("memberName").value = "";
+    render();
+}
+
+// ---------------- RENDER ----------------
+function render(){
+
+    // SIMPLE LISTS
+    ["redacteurs","effectifs","lieux","suspects"].forEach(key=>{
+        let list = get(key);
+        let html = "";
+
+        list.forEach((item,i)=>{
+            html += `<li>${item} <button onclick="removeItem('${key}',${i})">X</button></li>`;
+        });
+
+        document.getElementById(key+"List").innerHTML = html;
+    });
+
+    // GROUPS
+    let groups = getGroups();
+
+    let select = document.getElementById("groupSelect");
+    let html = "";
+
+    select.innerHTML = "";
+
+    for(let g in groups){
+
+        let opt = document.createElement("option");
+        opt.value = g;
+        opt.textContent = g;
+        select.appendChild(opt);
+
+        html += `<li>
+        <b>${g}</b>
+        <div class="small">${groups[g].join(", ")}</div>
+        </li>`;
+    }
+
+    document.getElementById("groupList").innerHTML = html;
+}
+
+render();
+
+</script>
+
+</body>
+</html>
